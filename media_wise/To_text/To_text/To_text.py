@@ -1,4 +1,4 @@
-﻿# import cv2
+# import cv2
 # import pytesseract
 # import numpy as np
 
@@ -20,6 +20,7 @@
 # cap.release()
 # cv2.destroyAllWindows()
 
+import os
 import speech_recognition as sr
 from moviepy.editor import VideoFileClip
 from pydub import AudioSegment
@@ -65,6 +66,26 @@ def video_to_text(video_file_path):
         return "Речь не была распознана"
     except sr.RequestError as e:
         return f"Ошибка сервиса распознавания речи; {e}"
+    
+def process_videos_in_folder(folder_path):
+    texts = {}
+    for filename in os.listdir(folder_path):
+        if filename.endswith((".mp4")):  # Добавить нужные форматы
+            video_file_path = os.path.join(folder_path, filename)
+            text = video_to_text(video_file_path)
+            texts[filename] = text
+            print(f"Processed {filename}: {text}...")
+        if filename.endswith((".wav")):  # Добавить нужные форматы
+            audio_file_path = os.path.join(folder_path, filename)
+            text = audio_to_text(audio_file_path)
+            texts[filename] = text
+            print(f"Processed {filename}: {text}...")
+    return texts
+
+# Пример использования функции
+folder_path = "C:\\Users\\danil\\Downloads\\Telegram Desktop\\media_wise\\media_wise\\To_text\\To_text"
+texts = process_videos_in_folder(folder_path)
+print(texts)
 
 # Пример использования функции
 # audio_file_path = "1_2.wav"
@@ -72,6 +93,6 @@ def video_to_text(video_file_path):
 # print(text)
 
 # Пример использования функции
-video_file_path = "17_2.mp4"
-text = video_to_text(video_file_path)
-print(text)
+# video_file_path = "17_2.mp4"
+# text = video_to_text(video_file_path)
+# print(text)

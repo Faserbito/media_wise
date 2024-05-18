@@ -232,3 +232,84 @@ texts = process_in_folder(folder_path)
 # # Записываем результат в файл "data.txt"
 # #with open('data.txt', 'w') as f:
 # #    json.dump(cased, f, ensure_ascii=False, indent=4)
+
+import os
+import wave
+import json
+from vosk import Model, KaldiRecognizer
+from pydub import AudioSegment
+from moviepy.editor import VideoFileClip
+
+model_path = "vosk-model-small-ru-0.22"
+model = Model(model_path)
+
+# Функция для преобразования аудио в текст
+def transcribe_audio(file_path):
+    audio = AudioSegment.from_file(file_path)
+    
+    audio = audio.set_channels(1).set_frame_rate(16000)
+    wav_path = "temp.wav"
+    audio.export(wav_path, format="wav")
+    
+    wf = wave.open(wav_path, "rb")
+    rec = KaldiRecognizer(model, wf.getframerate())
+
+    full_result = []
+    while True:
+        data = wf.readframes(8000)
+        if len(data) == 0:
+            break
+        if rec.AcceptWaveform(data):
+            res = json.loads(rec.Result())
+            full_result.append(res)
+        else:
+            res = json.loads(rec.PartialResult())
+            full_result.append(res)
+    
+    res = json.loads(rec.FinalResult())
+    full_result.append(res)
+
+    text = " ".join(res.get('text', '') for res in full_result if 'text' in res)
+
+    return text
+
+# Функция для извлечения аудио из видео и преобразования в текст
+def transcribe_video(video_path):
+    try:
+        video = VideoFileClip(video_path)
+        audio_path = "temp_audio.wav"
+        video.audio.write_audiofile(audio_path, codec='pcm_s16le')
+    
+        text = transcribe_audio(audio_path)
+    
+        # Удаление временного аудиофайла
+        os.remove(audio_path)
+    
+        return text
+    except Exception as e:
+        return f"Ошибка при обработке видео {e}"
+
+# audio_file = "1_2.wav"
+# text = transcribe_audio(audio_file)
+# print("Распознанный текст:", text)
+
+def process_in_folder(folder_path):
+    texts = {}
+    for filename in os.listdir(folder_path):
+        if filename.endswith((".mp4", ".avi", ".ogv", ".flv", ".wbm")):  # Добавить нужные форматы
+            video_file_path = os.path.join(folder_path, filename)
+            text = transcribe_video(video_file_path)
+            texts[filename] = text
+            print(f"Processed {filename}: {text}...")
+        if filename.endswith((".wav")) and filename != "temp_audio.wav" and filename != "temp.wav":  # Добавить нужные форматы
+            audio_file_path = os.path.join(folder_path, filename)
+            text = transcribe_audio(audio_file_path)
+            texts[filename] = text
+            print(f"Processed {filename}: {text}...")
+    return texts
+
+folder_path = "C:\\Users\\danil\\Downloads\\media_wise-main\\media_wise-main\\media_wise\\To_text\\To_text\\Video-audio"
+texts = process_in_folder(folder_path)
+print('---------------------------------------------------')
+for name, text in texts.items():
+    print(name, text)

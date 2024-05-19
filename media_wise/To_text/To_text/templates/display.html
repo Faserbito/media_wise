@@ -36,26 +36,26 @@
   <body>
     <div class="container">
       <h1 class="my-4 text-center">Содержимое файла</h1>
+      <form method="POST" action="{{ url_for('display_file', filename=filename) }}">
+        <div class="form-group">
+          <label for="brand">Выберите бренд:</label>
+          <select class="form-control" id="brand" name="brand">
+            {% for brand in brands %}
+              <option value="{{ brand }}" {% if brand == selected_brand %}selected{% endif %}>{{ brand }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Построить графики</button>
+      </form>
       <div class="charts-container">
         <div class="chart">
           <h2>Гистограмма</h2>
           <img src="{{ histogram_url }}" alt="Гистограмма">
         </div>
-<!-- Bootstrap CSS -->
-<!--        <div class="chart"> -->
-<!--          <h2>Линейный график</h2> -->
-<!--          <img src="{{ lineplot_url }}" alt="Линейный график"> -->
-<!--        </div> -->
         {% if piechart_url %}
         <div class="chart">
           <h2>Круговая диаграмма</h2>
           <img src="{{ piechart_url }}" alt="Круговая диаграмма">
-        </div>
-        {% endif %}
-        {% if scatterplot_url %}
-        <div class="chart">
-          <h2>Scatter Plot</h2>
-          <img src="{{ scatterplot_url }}" alt="Scatter Plot">
         </div>
         {% endif %}
       </div>
